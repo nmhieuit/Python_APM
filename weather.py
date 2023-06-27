@@ -68,7 +68,7 @@ def save_to_database(weather_details):
     db.session.commit()
     
 def get_weather_details(city):
-    api_key = '48a90ac42caa0'
+    api_key = '48a90ac42ca3'
     # source contain json data from api
     try:
         source = urllib.request.urlopen('http://api.openweathermap.org/data/2.5/weather?q=' + city + '&appid='+api_key).read()
@@ -94,6 +94,18 @@ def get_weather_details(city):
     save_to_database(data)
     return data
 
+def check_valid_city(cityname):
+    with open("cities.json", encoding="utf8") as file:
+        # Load its content and make a new dictionary
+        cities = json.load(file)
+
+        if not any(city['name'] == cityname for city in cities):
+            log.error("%s city is not a valid city name", cityname)
+            return abort(400)
+
+    return True
+
+    
 @app.route('/',methods=['POST','GET'])
 def weather():
     if request.method == 'POST':
@@ -102,6 +114,9 @@ def weather():
         #for default name
         city = get_default_city()
     log.info("Request made for %s city", city)
+    
+    check_valid_city(city)
+    
     data = get_weather_details(city)
     return render_template('index.html',data=data)
 
