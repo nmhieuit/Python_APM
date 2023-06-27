@@ -50,7 +50,7 @@ def save_to_database(weather_details):
     db.session.commit()
     
 def get_weather_details(city):
-    api_key = '48a90ac42c53'
+    api_key = 'b5d3b64d1a453c89375fb3951f8d4b1e'
     # source contain json data from api
     try:
         source = urllib.request.urlopen('http://api.openweathermap.org/data/2.5/weather?q=' + city + '&appid='+api_key).read()
