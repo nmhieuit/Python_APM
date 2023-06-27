@@ -5,9 +5,26 @@ import os
 import json
 import urllib.request
 from ddtrace import tracer
+import logging
+from pythonjsonlogger import jsonlogger
+from ddtrace import patch; patch(logging=True)
+
+# Logging
+logHandler = logging.FileHandler(filename='C:\\Users\\MyUser\\Downloads\\weatherapp\\log.json')
+formatter = jsonlogger.JsonFormatter()
+logHandler.setFormatter(formatter)
+
+FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
+          '[dd.service=%(dd.service)s dd.env=%(dd.env)s dd.version=%(dd.version)s dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
+          '- %(message)s')
+
+logging.basicConfig(format=FORMAT)
+
+log = logging.getLogger(__name__)
+log.addHandler(logHandler)
+log.setLevel(logging.INFO)
 
 tracer.set_tags({"track_error":True})
-
 app = Flask(__name__)
 
 #setting path for database file 
@@ -37,6 +54,7 @@ def tocelcius(temp):
     return str(round(float(temp) - 273.16,2))
 
 def get_default_city():
+    log.debug("Returning default city")
     return 'Delhi'
     
 def save_to_database(weather_details):
@@ -50,11 +68,12 @@ def save_to_database(weather_details):
     db.session.commit()
     
 def get_weather_details(city):
-    api_key = 'b5d3b64d1a453c89375fb3951f8d4b1e'
+    api_key = '48a90ac42caa0'
     # source contain json data from api
     try:
         source = urllib.request.urlopen('http://api.openweathermap.org/data/2.5/weather?q=' + city + '&appid='+api_key).read()
     except Exception as e:
+        log.error("Oops! API error occurred.")
         print("Oops!", e.__class__, "occurred.")
         return abort(400)
         
@@ -82,6 +101,7 @@ def weather():
     else:
         #for default name
         city = get_default_city()
+    log.info("Request made for %s city", city)
     data = get_weather_details(city)
     return render_template('index.html',data=data)
 
